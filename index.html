@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pipette Booking System</title>
+    <link rel="icon" type="image/png" href="https://accucal.co.uk/wp-content/uploads/2024/06/logo-AccuCal.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #007bff;
+            --primary-blue-dark: #0056b3;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #6c757d;
+            --text-dark: #343a40;
+            --text-light: #f1f3f5;
+            --success-bg: #d4edda;
+            --success-border: #c3e6cb;
+            --success-text: #155724;
+            --error-bg: #f8d7da;
+            --error-border: #f5c6cb;
+            --error-text: #721c24;
+            --warning-bg: #fff3cd;
+            --warning-border: #ffeeba;
+            --warning-text: #856404;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--medium-gray);
+            padding: 20px; /* Padding around the card */
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Vertically centers the card */
+            min-height: 100vh;
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow: hidden; /* Prevent body scrolling if card itself will scroll */
+        }
+
+        /* --- Main Content Card (BookingCard now contains header elements) --- */
+        .card, .login-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            /* Removed margin-top and margin-bottom for vertical centering and max-height */
+            /* margin-top: 50px; */
+            /* margin-bottom: 50px; */
+            /* New properties to make the card itself scrollable */
+            max-height: calc(100vh - 40px); /* 100vh minus 2 * body padding (20px) */
+            overflow-y: auto; /* Enable vertical scrolling for the card */
+            transition: all 0.3s ease-in-out;
+            /* Custom scrollbar for the card */
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
+        }
+
+            .card::-webkit-scrollbar,
+            .login-card::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .card::-webkit-scrollbar-track,
+            .login-card::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+            }
+
+            .card::-webkit-scrollbar-thumb,
+            .login-card::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 10px;
+            }
+
+                .card::-webkit-scrollbar-thumb:hover,
+                .login-card::-webkit-scrollbar-thumb:hover {
+                    background: #555;
+                }
+
+
+        .login-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 350px;
+            /* No need for margin-top/bottom here either due to flex centering */
+        }
+
+            .login-card h2 {
+                margin-bottom: 30px;
+            }
+
+            .login-card form {
+                width: 100%;
+                max-width: 400px;
+            }
+
+        /* New styles for the integrated card header content */
+        .card-header-content {
+            padding-bottom: 25px; /* Space below header content */
+            border-bottom: 1px solid var(--medium-gray); /* Separator */
+            margin-bottom: 30px; /* Space between header and form */
+        }
+
+        .card-title {
+            color: var(--primary-blue);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px; /* Slightly larger title */
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .progress-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 15px; /* Space below progress bars */
+        }
+
+        .progress-container {
+            flex: 1;
+            min-width: 280px; /* Ensure enough space for progress bars */
+            max-width: 400px; /* Limit width for cleaner look */
+        }
+
+        .progress-label {
+            font-size: 14px; /* Slightly larger font */
+            color: var(--dark-gray);
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            height: 9px; /* Slightly thicker */
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary-blue);
+            transition: width 0.3s ease-out, background-color 0.3s ease-out;
+            border-radius: 4px;
+        }
+
+            .progress-bar-fill.warning {
+                background-color: #ffc107; /* Yellow for low remaining */
+            }
+
+            .progress-bar-fill.critical {
+                background-color: #dc3545; /* Red for very low remaining */
+            }
+
+        .note {
+            font-size: 13px; /* Slightly larger note */
+            color: var(--dark-gray);
+            margin-top: 10px; /* Space above note */
+            text-align: center;
+            font-weight: 500;
+        }
+
+        h3 {
+            color: var(--text-dark);
+            font-size: 20px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: #ffffff;
+        }
+
+            input:focus, select:focus {
+                outline: none;
+                border-color: var(--primary-blue);
+                box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+            }
+
+            input[type="number"] {
+                appearance: textfield;
+            }
+
+                input[type="number"]::-webkit-inner-spin-button,
+                input[type="number"]::-webkit-outer-spin-button {
+                    opacity: 1;
+                }
+
+        button {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            cursor: pointer;
+            font-size: 17px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+        }
+
+            button:hover {
+                background-color: var(--primary-blue-dark);
+                transform: translateY(-1px);
+            }
+
+            button:active {
+                transform: translateY(0);
+            }
+
+            button:disabled {
+                background-color: #cccccc;
+                cursor: not-allowed;
+                box-shadow: none;
+                transform: none;
+            }
+
+        .month-section {
+            margin-bottom: 20px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 10px;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .month-header {
+            padding: 18px 25px;
+            background: var(--light-gray);
+            border-bottom: 1px solid var(--medium-gray);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 17px;
+            transition: background 0.2s ease;
+        }
+
+            .month-header:hover {
+                background: #e2e6ea;
+            }
+
+            .month-header span:last-child {
+                transition: transform 0.3s ease;
+            }
+
+        .month-content.active + .month-header span:last-child {
+            transform: rotate(180deg);
+        }
+
+        .month-content {
+            display: none;
+            padding: 20px 25px;
+        }
+
+            .month-content.active {
+                display: block;
+            }
+
+        .date-entry {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            background: #fdfdfe;
+            transition: all 0.3s ease;
+        }
+
+            .date-entry:hover {
+                border-color: var(--primary-blue);
+                box-shadow: 0 2px 10px rgba(0, 123, 255, 0.1);
+            }
+
+            .date-entry > label {
+                font-weight: 600;
+                display: block;
+                color: var(--primary-blue-dark);
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+
+        .date-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+            .date-inputs .form-group {
+                margin-bottom: 0;
+            }
+
+        .scrollable-dates {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 15px;
+            margin-top: 25px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 8px;
+            padding: 20px;
+            background-color: var(--light-gray);
+            /* Custom scrollbar for date container */
+            scrollbar-width: thin;
+            scrollbar-color: #a0a0a0 #f1f1f1;
+        }
+
+            .scrollable-dates::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .scrollable-dates::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+            }
+
+            .scrollable-dates::-webkit-scrollbar-thumb {
+                background: #a0a0a0; /* Slightly different color for nested scrollbar */
+                border-radius: 10px;
+            }
+
+                .scrollable-dates::-webkit-scrollbar-thumb:hover {
+                    background: #777;
+                }
+
+
+        /* --- Booking Summary Modal Styles --- */
+        .modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 2500;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+            .modal.show {
+                opacity: 1;
+                visibility: visible;
+            }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 550px; /* Slightly wider for summary */
+            width: 90%;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            position: relative;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        }
+
+        .modal.show .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 22px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .modal-content.summary-modal #preview-content {
+            background: var(--light-gray);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--medium-gray);
+            max-height: 300px; /* Make summary content scrollable if too long */
+            overflow-y: auto;
+            margin-bottom: 20px;
+            line-height: 1.8;
+            font-size: 15px;
+            color: var(--text-dark);
+            /* Custom scrollbar for preview content */
+            scrollbar-width: thin;
+            scrollbar-color: #b0b0b0 #f1f1f1;
+        }
+
+            .modal-content.summary-modal #preview-content::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .modal-content.summary-modal #preview-content::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+            }
+
+            .modal-content.summary-modal #preview-content::-webkit-scrollbar-thumb {
+                background: #b0b0b0;
+                border-radius: 10px;
+            }
+
+                .modal-content.summary-modal #preview-content::-webkit-scrollbar-thumb:hover {
+                    background: #888;
+                }
+
+
+            .modal-content.summary-modal #preview-content ul {
+                list-style: none;
+                padding: 0;
+                margin-bottom: 0;
+            }
+
+                .modal-content.summary-modal #preview-content ul li {
+                    padding: 5px 0;
+                    border-bottom: 1px dotted #e9ecef;
+                }
+
+                    .modal-content.summary-modal #preview-content ul li:last-child {
+                        border-bottom: none;
+                    }
+
+            .modal-content.summary-modal #preview-content p {
+                margin: 5px 0;
+            }
+
+                .modal-content.summary-modal #preview-content p strong {
+                    color: var(--primary-blue-dark);
+                }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px; /* Space between summary and buttons */
+        }
+
+            .modal-buttons button {
+                padding: 10px 18px;
+                font-size: 16px;
+            }
+
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--dark-gray);
+            transition: color 0.2s ease;
+        }
+
+            .close-btn:hover {
+                color: var(--text-dark);
+            }
+
+        .form-actions {
+            margin-top: 35px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            border-top: 1px solid var(--medium-gray);
+            padding-top: 25px;
+        }
+
+        .error {
+            color: var(--error-text);
+            font-size: 14px;
+            margin-top: 15px;
+            display: none;
+            background: var(--error-bg);
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--error-border);
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 650px;
+            width: 90%;
+            background: white;
+            border-radius: 10px;
+            padding: 20px 25px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: none;
+            border: 1px solid;
+            animation: fadeInDown 0.5s ease-out;
+        }
+
+            .notification.success {
+                background: var(--success-bg);
+                border-color: var(--success-border);
+                color: var(--success-text);
+            }
+
+            .notification.error {
+                background: var(--error-bg);
+                border-color: var(--error-border);
+                color: var(--error-text);
+            }
+
+            .notification.warning {
+                background: var(--warning-bg);
+                border-color: var(--warning-border);
+                color: var(--warning-text);
+            }
+
+            .notification p {
+                margin: 0 0 10px 0;
+                font-size: 15px;
+            }
+
+                .notification p:last-child {
+                    margin-bottom: 0;
+                }
+
+            .notification a {
+                color: var(--primary-blue-dark);
+                text-decoration: none;
+                font-weight: 500;
+            }
+
+                .notification a:hover {
+                    text-decoration: underline;
+                }
+
+        .notification-close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--dark-gray);
+            line-height: 1;
+            transition: color 0.2s ease;
+        }
+
+            .notification-close:hover {
+                color: var(--text-dark);
+            }
+
+        .calculation {
+            margin-top: 15px;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+            .calculation.ok {
+                color: var(--success-text);
+                background-color: var(--success-bg);
+                border: 1px solid var(--success-border);
+            }
+
+            .calculation.error {
+                color: var(--error-text);
+                background-color: var(--error-bg);
+                border: 1px solid var(--error-border);
+            }
+
+        .remaining-info {
+            font-size: 14px;
+            color: var(--dark-gray);
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="notification" class="notification">
+        <span class="notification-close" onclick="closeNotification()">×</span>
+        <p id="notificationMessage"></p>
+        <p id="notificationExtra"></p>
+        <p id="notificationSupport"></p>
+    </div>
+
+    <div class="login-card" id="loginCard">
+        <h2>
+            <span style="color: var(--primary-blue);">Login to Pipette Booking System</span>
+        </h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required placeholder="Enter password">
+            </div>
+            <div id="loginError" class="error"></div>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <div class="card" id="bookingCard" style="display: none;">
+        <div class="card-header-content">
+            <h2 class="card-title">
+                <span style="color: var(--primary-blue);">Pipette Booking System</span>
+            </h2>
+            <div class="progress-section">
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Remaining Single Channel Pipettes: <strong id="headerRemainingSingles">0</strong></span>
+                        <span id="headerSingleTotalLabel">0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" id="headerSingleProgress" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Remaining Multi Channel Pipettes: <strong id="headerRemainingMulti">0</strong></span>
+                        <span id="headerMultiTotalLabel">0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" id="headerMultiProgress" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="note">Note: Each multi-channel pipette counts as 3 units, and each single-channel pipette counts as 1 unit.</div>
+        </div>
+
+        <form id="initialForm">
+            <div class="form-group">
+                <label for="singleTotal">Total Single-Channel Pipettes <span class="note">(1 Single Channel Pipette = 1 Unit)</span></label>
+                <input type="number" id="singleTotal" required min="0" step="1" oninput="validatePositiveInteger(this); updateGlobalTotals()" placeholder="Enter number of single pipettes">
+            </div>
+            <div class="form-group">
+                <label for="multiTotal">Total Multi-Channel Pipettes <span class="note">(1 Multi Channel Pipette = 3 Units)</span></label>
+                <input type="number" id="multiTotal" required min="0" step="1" oninput="validatePositiveInteger(this); updateGlobalTotals()" placeholder="Enter number of multi pipettes">
+            </div>
+            <button type="submit">Proceed to Booking</button>
+        </form>
+
+        <div id="bookingContent" style="display:none">
+            <form id="bookingForm">
+                <div class="form-group">
+                    <label>Select Booking Dates</label>
+                    <div class="scrollable-dates">
+                        <div id="datesContainer"></div>
+                    </div>
+                </div>
+                <div id="errorMessage" class="error"></div>
+                <div class="form-actions">
+                    <button type="button" onclick="openPreviewModal()">Preview Booking</button>
+                    <button type="button" onclick="submitBooking()">Submit Booking</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="confirmationModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeModal('confirmationModal')">×</span>
+                <h3>Confirm Your Details</h3>
+                <form id="confirmationForm">
+                    <div class="form-group">
+                        <label for="userName">Name</label>
+                        <input type="text" id="userName" required placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Email</label>
+                        <input type="email" id="userEmail" required placeholder="Enter your email">
+                    </div>
+                    <button type="submit">Confirm Booking</button>
+                    <div id="confirmationError" class="error"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="previewModal" class="modal">
+        <div class="modal-content summary-modal">
+            <span class="close-btn" onclick="closeModal('previewModal')">×</span>
+            <h3>Booking Summary</h3>
+            <div id="preview-content">
+            </div>
+            <div class="modal-buttons">
+                <button type="button" onclick="copySummaryText()">Copy Summary</button>
+                <button type="button" onclick="closeModal('previewModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show login panel initially
+        document.getElementById('loginCard').style.display = 'flex';
+        document.getElementById('bookingCard').style.display = 'none';
+
+        // Global variables
+        let totalSingles = 0;
+        let totalMulti = 0;
+        let remainingSingles = 0;
+        let remainingMulti = 0;
+        let availableDates = [];
+        let bookedDates = {};
+        let currentBookings = [];
+
+        // --- Utility Functions ---
+        function validatePositiveInteger(input) {
+            if (input.value < 0 || !Number.isInteger(Number(input.value))) {
+                input.value = '';
+            }
+        }
+
+        function getDayName(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('en-US', { weekday: 'long' });
+        }
+
+        function getMonthYear(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+
+        function showNotification(message, type, extraMessage = '', supportMessage = 'Contact us for support: <a href="mailto:info@accucal.co.uk">info@accucal.co.uk</a>') {
+            const notification = document.getElementById('notification');
+            const messageDiv = document.getElementById('notificationMessage');
+            const extraDiv = document.getElementById('notificationExtra');
+            const supportDiv = document.getElementById('notificationSupport');
+
+            messageDiv.textContent = message;
+            extraDiv.innerHTML = extraMessage;
+            supportDiv.innerHTML = supportMessage;
+
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.style.display = 'none', 15000);
+            }, 30000);
+        }
+
+        function closeNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.remove('show');
+            setTimeout(() => notification.style.display = 'none', 3000);
+        }
+
+        // --- Login Form Logic ---
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('https://majd-accuacal-uk.onrender.com/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('loginCard').style.display = 'none';
+                    document.getElementById('bookingCard').style.display = 'block';
+                    errorDiv.style.display = 'none';
+                } else {
+                    errorDiv.textContent = result.message || 'Invalid username or password.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Login failed. Please try again later.';
+                errorDiv.style.display = 'block';
+                console.error('Login error:', error);
+            }
+        });
+
+        // --- Initial Form Logic ---
+        document.getElementById('initialForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            totalSingles = parseInt(document.getElementById('singleTotal').value) || 0;
+            totalMulti = parseInt(document.getElementById('multiTotal').value) || 0;
+            remainingSingles = totalSingles;
+            remainingMulti = totalMulti;
+
+            if (totalSingles === 0 && totalMulti === 0) {
+                showNotification("Please enter at least one pipette to proceed.", "warning");
+                return;
+            }
+
+            document.getElementById('initialForm').style.display = 'none';
+            document.getElementById('bookingContent').style.display = 'block';
+            updateProgress();
+
+            fetchAvailableDates();
+        });
+
+        function updateGlobalTotals() {
+            totalSingles = parseInt(document.getElementById('singleTotal').value) || 0;
+            totalMulti = parseInt(document.getElementById('multiTotal').value) || 0;
+            remainingSingles = totalSingles;
+            remainingMulti = totalMulti;
+            updateProgress();
+            bookedDates = {};
+            document.getElementById('datesContainer').innerHTML = '';
+            document.getElementById('errorMessage').style.display = 'none';
+            closeModal('previewModal'); // Ensure preview modal is closed if totals change
+        }
+
+        async function fetchAvailableDates() {
+            try {
+                const response = await fetch('https://majd-accuacal-uk.onrender.com/available-dates');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                availableDates = data;
+                renderAvailableDates();
+            } catch (err) {
+                showNotification('Failed to load available dates. Please try again later.', "error");
+                document.getElementById('errorMessage').textContent = 'Failed to load available dates. Please try again.';
+                document.getElementById('errorMessage').style.display = 'block';
+                console.error('Fetch dates error:', err);
+            }
+        }
+
+        function renderAvailableDates() {
+            const container = document.getElementById('datesContainer');
+            container.innerHTML = '';
+
+            const validDates = availableDates.filter(item => item.remaining >= 1);
+            if (validDates.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--dark-gray); padding: 20px;">No dates currently available for booking with sufficient capacity.</p>';
+                return;
+            }
+
+            const datesByMonth = {};
+            validDates.forEach((item, idx) => {
+                const monthYear = getMonthYear(item.date);
+                if (!datesByMonth[monthYear]) {
+                    datesByMonth[monthYear] = [];
+                }
+                datesByMonth[monthYear].push({ ...item, originalIdx: idx });
+            });
+
+            Object.keys(datesByMonth).sort((a, b) => new Date(a) - new Date(b)).forEach((monthYear, monthIdx) => {
+                const monthSection = document.createElement('div');
+                monthSection.className = 'month-section';
+                monthSection.innerHTML = `
+                        <div class="month-header" onclick="toggleMonth(${monthIdx})">
+                            <span>${monthYear}</span>
+                            <span>&#9660;</span>
+                        </div>
+                        <div class="month-content" id="month-${monthIdx}">
+                            ${datesByMonth[monthYear].map(item => {
+                    const dateId = item.date.replace(/-/g, '');
+                    const dailyCapacity = item.remaining;
+                    const currentSingle = bookedDates[item.date]?.single || 0;
+                    const currentMulti = bookedDates[item.date]?.multi || 0;
+
+                    return `
+                                    <div class="date-entry">
+                                        <label>${item.date} (${getDayName(item.date)}) (Daily Remaining Capacity: ${dailyCapacity} Units)</label>
+                                        <div class="date-inputs">
+                                            <div class="form-group">
+                                                <label for="single-${dateId}">Single Channel Pipettes <span class="note">(1 Unit)</span></label>
+                                                <input type="number" min="0" step="1" id="single-${dateId}" placeholder="0" value="${currentSingle}"
+                                                       oninput="validatePositiveInteger(this); updateDailyUnits('${item.date}', this, 'single')"
+                                                       onchange="updateDailyUnits('${item.date}', this, 'single')">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="multi-${dateId}">Multi Channel Pipettes <span class="note">(3 Units)</span></label>
+                                                <input type="number" min="0" step="1" id="multi-${dateId}" placeholder="0" value="${currentMulti}"
+                                                       oninput="validatePositiveInteger(this); updateDailyUnits('${item.date}', this, 'multi')"
+                                                       onchange="updateDailyUnits('${item.date}', this, 'multi')">
+                                            </div>
+                                        </div>
+                                        <div id="calculation-${dateId}" class="calculation"></div>
+                                        <div id="remainingDaily-${dateId}" class="remaining-info"></div>
+                                    </div>
+                                `;
+                }).join('')}
+                        </div>
+                    `;
+                container.appendChild(monthSection);
+            });
+            Object.keys(bookedDates).forEach(date => {
+                const dateData = availableDates.find(d => d.date === date);
+                if (dateData) {
+                    updateDailyUnits(date, null, 'initial');
+                }
+            });
+            updateProgress();
+        }
+
+        function toggleMonth(index) {
+            const content = document.getElementById(`month-${index}`);
+            const header = content.previousElementSibling;
+            const arrowSpan = header.querySelector('span:last-child');
+
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                arrowSpan.innerHTML = '&#9660;';
+            } else {
+                document.querySelectorAll('.month-content.active').forEach(openContent => {
+                    openContent.classList.remove('active');
+                    openContent.previousElementSibling.querySelector('span:last-child').innerHTML = '&#9660;';
+                });
+                content.classList.add('active');
+                arrowSpan.innerHTML = '&#9650;';
+            }
+        }
+
+        function updateDailyUnits(dateStr, inputElement, type) {
+            const dateId = dateStr.replace(/-/g, '');
+            const singleInput = document.getElementById(`single-${dateId}`);
+            const multiInput = document.getElementById(`multi-${dateId}`);
+            const calcDiv = document.getElementById(`calculation-${dateId}`);
+            const remainingDailyDiv = document.getElementById(`remainingDaily-${dateId}`);
+
+            let s = parseInt(singleInput.value) || 0;
+            let m = parseInt(multiInput.value) || 0;
+
+            const dateInfo = availableDates.find(d => d.date === dateStr);
+            if (!dateInfo) return;
+
+            const dailyUsed = s + (m * 3);
+            const dailyRemainingCapacity = dateInfo.remaining;
+
+            if (dailyUsed > dailyRemainingCapacity) {
+                calcDiv.textContent = `Error: Total units (${dailyUsed}) exceed daily capacity (${dailyRemainingCapacity}).`;
+                calcDiv.className = 'calculation error';
+                remainingDailyDiv.textContent = `Available for this day: ${dailyRemainingCapacity - dailyUsed} Units`;
+                if (inputElement) {
+                    if (type === 'single') {
+                        s = s - (dailyUsed - dailyRemainingCapacity);
+                        singleInput.value = s < 0 ? 0 : s;
+                    } else if (type === 'multi') {
+                        m = m - Math.ceil((dailyUsed - dailyRemainingCapacity) / 3);
+                        multiInput.value = m < 0 ? 0 : m;
+                    }
+                    s = parseInt(singleInput.value) || 0;
+                    m = parseInt(multiInput.value) || 0;
+                    const correctedDailyUsed = s + (m * 3);
+                    calcDiv.textContent = `Calculation: ${correctedDailyUsed} / ${dailyRemainingCapacity} (OK)`;
+                    calcDiv.className = 'calculation ok';
+                    remainingDailyDiv.textContent = `Available for this day: ${dailyRemainingCapacity - correctedDailyUsed} Units`;
+                }
+            } else {
+                calcDiv.textContent = `Calculation: ${dailyUsed} / ${dailyRemainingCapacity} (OK)`;
+                calcDiv.className = 'calculation ok';
+                remainingDailyDiv.textContent = `Available for this day: ${dailyRemainingCapacity - dailyUsed} Units`;
+            }
+
+            bookedDates[dateStr] = { single: s, multi: m };
+            updateOverallRemaining();
+        }
+
+        function updateOverallRemaining() {
+            let totalBookedSingles = 0;
+            let totalBookedMulti = 0;
+
+            for (const date in bookedDates) {
+                totalBookedSingles += bookedDates[date].single;
+                totalBookedMulti += bookedDates[date].multi;
+            }
+
+            remainingSingles = totalSingles - totalBookedSingles;
+            remainingMulti = totalMulti - totalBookedMulti;
+
+            let globalError = '';
+            if (remainingSingles < 0) {
+                globalError = `You have selected ${Math.abs(remainingSingles)} more single pipettes than your total (${totalSingles}).`;
+            }
+            if (remainingMulti < 0) {
+                if (globalError) globalError += '<br>';
+                globalError += `You have selected ${Math.abs(remainingMulti)} more multi pipettes than your total (${totalMulti}).`;
+            }
+
+            document.getElementById('errorMessage').innerHTML = globalError;
+            document.getElementById('errorMessage').style.display = globalError ? 'block' : 'none';
+
+            updateProgress();
+            updateInputStates();
+        }
+
+        function updateInputStates() {
+            availableDates.forEach(item => {
+                const dateId = item.date.replace(/-/g, '');
+                const singleInput = document.getElementById(`single-${dateId}`);
+                const multiInput = document.getElementById(`multi-${dateId}`);
+
+                if (singleInput) {
+                    const currentSingle = parseInt(singleInput.value) || 0;
+                    const currentMulti = parseInt(multiInput.value) || 0;
+                    const dailyCapacity = item.remaining;
+                    const dailyUsed = currentSingle + (currentMulti * 3);
+
+                    const globalSinglesExhausted = remainingSingles <= 0 && currentSingle === 0;
+                    const dailySinglesExhausted = (dailyUsed + 1 > dailyCapacity) && currentSingle === 0;
+
+                    singleInput.disabled = globalSinglesExhausted || dailySinglesExhausted;
+                }
+                if (multiInput) {
+                    const currentSingle = parseInt(singleInput.value) || 0;
+                    const currentMulti = parseInt(multiInput.value) || 0;
+                    const dailyCapacity = item.remaining;
+                    const dailyUsed = currentSingle + (currentMulti * 3);
+
+                    const globalMultiExhausted = remainingMulti <= 0 && currentMulti === 0;
+                    const dailyMultiExhausted = (dailyUsed + 3 > dailyCapacity) && currentMulti === 0;
+
+                    multiInput.disabled = globalMultiExhausted || dailyMultiExhausted;
+                }
+            });
+        }
+
+        function updateProgress() {
+            const singlePercent = totalSingles > 0 ? (remainingSingles / totalSingles) * 100 : 100;
+            const multiPercent = totalMulti > 0 ? (remainingMulti / totalMulti) * 100 : 100;
+
+            document.getElementById('headerRemainingSingles').textContent = Math.max(0, remainingSingles);
+            document.getElementById('headerSingleTotalLabel').textContent = `/ ${totalSingles}`;
+            document.getElementById('headerRemainingMulti').textContent = Math.max(0, remainingMulti);
+            document.getElementById('headerMultiTotalLabel').textContent = `/ ${totalMulti}`;
+
+            const headerSingleProgressFill = document.getElementById('headerSingleProgress');
+            headerSingleProgressFill.style.width = `${singlePercent}%`;
+            updateProgressBarColor(headerSingleProgressFill, singlePercent);
+
+            const headerMultiProgressFill = document.getElementById('headerMultiProgress');
+            headerMultiProgressFill.style.width = `${multiPercent}%`;
+            updateProgressBarColor(headerMultiProgressFill, multiPercent);
+        }
+
+        function updateProgressBarColor(progressBarFillElement, percentage) {
+            progressBarFillElement.classList.remove('warning', 'critical');
+            if (percentage <= 20) {
+                progressBarFillElement.classList.add('critical');
+            } else if (percentage <= 50) {
+                progressBarFillElement.classList.add('warning');
+            }
+        }
+
+        // --- Booking Summary Modal Functions ---
+        function openPreviewModal() {
+            const summary = [];
+            let totalBookedSingles = 0;
+            let totalBookedMulti = 0;
+            let hasError = false;
+
+            document.getElementById('errorMessage').style.display = 'none';
+
+            availableDates.forEach((item, idx) => {
+                const dateId = item.date.replace(/-/g, '');
+                const s = parseInt(document.getElementById(`single-${dateId}`).value) || 0;
+                const m = parseInt(document.getElementById(`multi-${dateId}`).value) || 0;
+                const dailyUnits = s + (m * 3);
+
+                if (dailyUnits > item.remaining) {
+                    showNotification(`Error: Daily booking exceeds capacity on ${item.date}. Maximum: ${item.remaining} units.`, "error");
+                    hasError = true;
+                }
+
+                if (s > 0 || m > 0) {
+                    const dayName = getDayName(item.date);
+                    summary.push(`<li><strong>${item.date}</strong> (${dayName}): ${s} Single, ${m} Multi (${dailyUnits} total units)</li>`);
+                    totalBookedSingles += s;
+                    totalBookedMulti += m;
+                }
+            });
+
+            if (hasError) {
+                return;
+            }
+
+            if (totalBookedSingles > totalSingles || totalBookedMulti > totalMulti) {
+                showNotification("Error: Your total selected pipettes exceed the initial quantities you specified.", "error");
+                return;
+            }
+
+            const previewContentDiv = document.getElementById('preview-content');
+            if (Object.keys(bookedDates).length === 0 || summary.length === 0) {
+                previewContentDiv.innerHTML = `<p>No pipettes selected for booking yet.</p>`;
+            } else {
+                previewContentDiv.innerHTML = `
+                        <ul>${summary.join('')}</ul>
+                        <p>Total Single Pipettes Selected: <strong>${totalBookedSingles}</strong> / ${totalSingles}</p>
+                        <p>Total Multi Pipettes Selected: <strong>${totalBookedMulti}</strong> / ${totalMulti}</p>
+                        <p>Remaining Single Pipettes from total: <strong>${totalSingles - totalBookedSingles}</strong></p>
+                        <p>Remaining Multi Pipettes from total: <strong>${totalMulti - totalBookedMulti}</strong></p>
+                    `;
+            }
+
+            const previewModal = document.getElementById('previewModal');
+            previewModal.classList.add('show');
+        }
+
+        function copySummaryText() {
+            const previewContentDiv = document.getElementById('preview-content');
+            const textToCopy = previewContentDiv.innerText;
+
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    showNotification('Booking summary copied to clipboard!', 'success');
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    showNotification('Failed to copy summary. Please try manually.', 'error');
+                });
+        }
+
+        // --- Confirmation Modal & Submission ---
+        function submitBooking() {
+            currentBookings = [];
+            let totalBookedSingles = 0;
+            let totalBookedMulti = 0;
+            let validationError = false;
+
+            document.getElementById('errorMessage').style.display = 'none';
+
+            availableDates.forEach(item => {
+                const dateId = item.date.replace(/-/g, '');
+                const singleInput = document.getElementById(`single-${dateId}`);
+                const multiInput = document.getElementById(`multi-${dateId}`);
+
+                if (singleInput && multiInput) {
+                    const s = parseInt(singleInput.value) || 0;
+                    const m = parseInt(multiInput.value) || 0;
+                    const dailyUnits = s + (m * 3);
+
+                    if (dailyUnits > item.remaining) {
+                        showNotification(`Validation Error: Exceeded daily capacity on ${item.date}. Maximum: ${item.remaining} units. Please correct.`, "error");
+                        validationError = true;
+                    }
+
+                    if (s > 0 || m > 0) {
+                        currentBookings.push({ date: item.date, single: s, multi: m });
+                        totalBookedSingles += s;
+                        totalBookedMulti += m;
+                    }
+                }
+            });
+
+            if (validationError) {
+                return;
+            }
+
+            if (currentBookings.length === 0) {
+                showNotification('Please select at least one date with pipettes to book.', "warning");
+                return;
+            }
+
+            if (totalBookedSingles > totalSingles || totalBookedMulti > totalMulti) {
+                showNotification(`Total selected pipettes (${totalBookedSingles} single, ${totalBookedMulti} multi) exceed your initial entered totals (${totalSingles} single, ${totalMulti} multi). Please adjust.`, "error");
+                return;
+            }
+
+            const confirmationModal = document.getElementById('confirmationModal');
+            confirmationModal.classList.add('show');
+        }
+
+        document.getElementById('confirmationForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const userName = document.getElementById('userName').value.trim();
+            const userEmail = document.getElementById('userEmail').value.trim();
+            const confirmationErrorDiv = document.getElementById('confirmationError');
+
+            if (!userName || !userEmail) {
+                confirmationErrorDiv.textContent = 'Please enter both Name and Email.';
+                confirmationErrorDiv.style.display = 'block';
+                return;
+            }
+
+            const bookingData = {
+                bookings: currentBookings,
+                userName: userName,
+                userEmail: userEmail
+            };
+
+            try {
+                const res = await fetch('https://majd-accuacal-uk.onrender.com/book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData)
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    showNotification(data.message, "success", '<p> Please find the link below to download the required Decontamination Form:</p><a href="https://accucal.co.uk/wp-content/uploads/2025/06/Decon-Form-For-Crick-use-only.pdf" target="_blank">Decontamination Form</a>');
+                    closeModal('confirmationModal');
+                    resetBookingSystem();
+                } else {
+                    showNotification(data.message || 'Error submitting booking. Please try again.', "error");
+                    confirmationErrorDiv.textContent = data.message || 'Error submitting booking. Please review your selections.';
+                    confirmationErrorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                showNotification('Network error submitting booking. Please check your connection and try again.', "error");
+                confirmationErrorDiv.textContent = 'Failed to connect to the server.';
+                confirmationErrorDiv.style.display = 'block';
+                console.error('Booking submission error:', err);
+            }
+        });
+
+        // Function to close any modal
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('show');
+                if (modalId === 'confirmationModal') {
+                    document.getElementById('confirmationForm').reset();
+                    document.getElementById('confirmationError').style.display = 'none';
+                }
+            }
+        }
+
+        function resetBookingSystem() {
+            document.getElementById('initialForm').reset();
+            document.getElementById('initialForm').style.display = 'block';
+            document.getElementById('bookingContent').style.display = 'none';
+            document.getElementById('datesContainer').innerHTML = '';
+            document.getElementById('errorMessage').style.display = 'none';
+            closeModal('previewModal'); // Close preview modal on full system reset
+
+            totalSingles = 0;
+            totalMulti = 0;
+            remainingSingles = 0;
+            remainingMulti = 0;
+            availableDates = [];
+            bookedDates = {};
+            currentBookings = [];
+            updateProgress();
+        }
+    </script>
+</body>
+</html>
