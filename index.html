@@ -492,10 +492,20 @@
         .form-actions {
             margin-top: 35px;
             display: flex;
-            justify-content: flex-end;
+            justify-content: flex-end; /* Align buttons to the right */
             gap: 15px;
             border-top: 1px solid var(--medium-gray);
             padding-top: 25px;
+        }
+
+        /* New styles for buttons next to progress bars */
+        .header-actions {
+            display: flex;
+            justify-content: center; /* Center buttons horizontally */
+            gap: 15px;
+            margin-top: 20px; /* Space above buttons */
+            padding-top: 20px; /* Padding for the top border */
+            border-top: 1px solid var(--medium-gray); /* Separator line */
         }
 
         .error {
@@ -627,9 +637,6 @@
     </div>
 
     <div class="login-card" id="loginCard">
-        <h2>
-            <span style="color: var(--primary-blue);">Login to Pipette Booking System</span>
-        </h2>
         <form id="loginForm">
             <div class="form-group">
                 <label for="username">Username</label>
@@ -646,9 +653,7 @@
 
     <div class="card" id="bookingCard" style="display: none;">
         <div class="card-header-content">
-            <h2 class="card-title">
-                <span style="color: var(--primary-blue);">Pipette Booking System</span>
-            </h2>
+  
             <div class="progress-section">
                 <div class="progress-container">
                     <div class="progress-label">
@@ -669,7 +674,10 @@
                     </div>
                 </div>
             </div>
-            <div class="note">Note: Each multi-channel pipette counts as 3 units, and each single-channel pipette counts as 1 unit.</div>
+            <div class="header-actions" id="bookingActionButtons" style="display:none;">
+                <button type="button" onclick="openPreviewModal()">Preview Booking</button>
+                <button type="button" onclick="submitBooking()">Submit Booking</button>
+            </div>
         </div>
 
         <form id="initialForm">
@@ -693,10 +701,6 @@
                     </div>
                 </div>
                 <div id="errorMessage" class="error"></div>
-                <div class="form-actions">
-                    <button type="button" onclick="openPreviewModal()">Preview Booking</button>
-                    <button type="button" onclick="submitBooking()">Submit Booking</button>
-                </div>
             </form>
         </div>
 
@@ -840,6 +844,7 @@
 
             document.getElementById('initialForm').style.display = 'none';
             document.getElementById('bookingContent').style.display = 'block';
+            document.getElementById('bookingActionButtons').style.display = 'flex'; // Show the buttons
             updateProgress();
 
             fetchAvailableDates();
@@ -897,41 +902,41 @@
                 const monthSection = document.createElement('div');
                 monthSection.className = 'month-section';
                 monthSection.innerHTML = `
-                        <div class="month-header" onclick="toggleMonth(${monthIdx})">
-                            <span>${monthYear}</span>
-                            <span>&#9660;</span>
-                        </div>
-                        <div class="month-content" id="month-${monthIdx}">
-                            ${datesByMonth[monthYear].map(item => {
+                            <div class="month-header" onclick="toggleMonth(${monthIdx})">
+                                <span>${monthYear}</span>
+                                <span>&#9660;</span>
+                            </div>
+                            <div class="month-content" id="month-${monthIdx}">
+                                ${datesByMonth[monthYear].map(item => {
                     const dateId = item.date.replace(/-/g, '');
                     const dailyCapacity = item.remaining;
                     const currentSingle = bookedDates[item.date]?.single || 0;
                     const currentMulti = bookedDates[item.date]?.multi || 0;
 
                     return `
-                                    <div class="date-entry">
-                                        <label>${item.date} (${getDayName(item.date)}) (Daily Remaining Capacity: ${dailyCapacity} Units)</label>
-                                        <div class="date-inputs">
-                                            <div class="form-group">
-                                                <label for="single-${dateId}">Single Channel Pipettes <span class="note">(1 Unit)</span></label>
-                                                <input type="number" min="0" step="1" id="single-${dateId}" placeholder="0" value="${currentSingle}"
-                                                       oninput="validatePositiveInteger(this); updateDailyUnits('${item.date}', this, 'single')"
-                                                       onchange="updateDailyUnits('${item.date}', this, 'single')">
+                                        <div class="date-entry">
+                                            <label>${item.date} (${getDayName(item.date)}) (Daily Remaining Capacity: ${dailyCapacity} Units)</label>
+                                            <div class="date-inputs">
+                                                <div class="form-group">
+                                                    <label for="single-${dateId}">Single Channel Pipettes <span class="note">(1 Unit)</span></label>
+                                                    <input type="number" min="0" step="1" id="single-${dateId}" placeholder="0" value="${currentSingle}"
+                                                           oninput="validatePositiveInteger(this); updateDailyUnits('${item.date}', this, 'single')"
+                                                           onchange="updateDailyUnits('${item.date}', this, 'single')">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="multi-${dateId}">Multi Channel Pipettes <span class="note">(3 Units)</span></label>
+                                                    <input type="number" min="0" step="1" id="multi-${dateId}" placeholder="0" value="${currentMulti}"
+                                                           oninput="validatePositiveInteger(this); updateDailyUnits('${item.date}', this, 'multi')"
+                                                           onchange="updateDailyUnits('${item.date}', this, 'multi')">
+                                                </div>
                                             </div>
-                                            <div class="form-group">
-                                                <label for="multi-${dateId}">Multi Channel Pipettes <span class="note">(3 Units)</span></label>
-                                                <input type="number" min="0" step="1" id="multi-${dateId}" placeholder="0" value="${currentMulti}"
-                                                       oninput="validatePositiveInteger(this); updateDailyUnits('${item.date}', this, 'multi')"
-                                                       onchange="updateDailyUnits('${item.date}', this, 'multi')">
-                                            </div>
+                                            <div id="calculation-${dateId}" class="calculation"></div>
+                                            <div id="remainingDaily-${dateId}" class="remaining-info"></div>
                                         </div>
-                                        <div id="calculation-${dateId}" class="calculation"></div>
-                                        <div id="remainingDaily-${dateId}" class="remaining-info"></div>
-                                    </div>
-                                `;
+                                    `;
                 }).join('')}
-                        </div>
-                    `;
+                            </div>
+                        `;
                 container.appendChild(monthSection);
             });
             Object.keys(bookedDates).forEach(date => {
@@ -1134,12 +1139,12 @@
                 previewContentDiv.innerHTML = `<p>No pipettes selected for booking yet.</p>`;
             } else {
                 previewContentDiv.innerHTML = `
-                        <ul>${summary.join('')}</ul>
-                        <p>Total Single Pipettes Selected: <strong>${totalBookedSingles}</strong> / ${totalSingles}</p>
-                        <p>Total Multi Pipettes Selected: <strong>${totalBookedMulti}</strong> / ${totalMulti}</p>
-                        <p>Remaining Single Pipettes from total: <strong>${totalSingles - totalBookedSingles}</strong></p>
-                        <p>Remaining Multi Pipettes from total: <strong>${totalMulti - totalBookedMulti}</strong></p>
-                    `;
+                            <ul>${summary.join('')}</ul>
+                            <p>Total Single Pipettes Selected: <strong>${totalBookedSingles}</strong> / ${totalSingles}</p>
+                            <p>Total Multi Pipettes Selected: <strong>${totalBookedMulti}</strong> / ${totalMulti}</p>
+                            <p>Remaining Single Pipettes from total: <strong>${totalSingles - totalBookedSingles}</strong></p>
+                            <p>Remaining Multi Pipettes from total: <strong>${totalMulti - totalBookedMulti}</strong></p>
+                        `;
             }
 
             const previewModal = document.getElementById('previewModal');
@@ -1269,6 +1274,7 @@
             document.getElementById('initialForm').reset();
             document.getElementById('initialForm').style.display = 'block';
             document.getElementById('bookingContent').style.display = 'none';
+            document.getElementById('bookingActionButtons').style.display = 'none'; // Hide the buttons on reset
             document.getElementById('datesContainer').innerHTML = '';
             document.getElementById('errorMessage').style.display = 'none';
             closeModal('previewModal'); // Close preview modal on full system reset
