@@ -1234,6 +1234,7 @@
             };
 
             try {
+                showNotification("Your booking is processing. Please wait a few seconds to see the result and receive the confirmation email.", "warning");
                 const res = await fetch('https://majd-accuacal-uk.onrender.com/book', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
